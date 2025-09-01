@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 import { Otp } from "../models/otp.model.js";
 import { generateOtp } from "../helper/helper.js";
+import { sendEmail } from "../services/emailService.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 console.log(JWT_SECRET);
@@ -25,6 +26,8 @@ const signupEmail = async (req, res) => {
       fullName,
       dob,
     });
+
+    await sendEmail(email, "Your OTP Code", `Your OTP is ${otpCode}`);
 
     return res
       .status(200)
@@ -108,6 +111,8 @@ const signIn = async (req, res) => {
       otpCode,
       otpExpiry,
     });
+
+    await sendEmail(email, "Your OTP Code", `Your OTP is ${otpCode}`);
 
     return res
       .status(200)
