@@ -1,5 +1,6 @@
 import React, { use, useState } from "react";
 import { winImg, icon } from "../../assets/image";
+import axios from "axios";
 
 const SigninPage = () => {
   const [email, setEmail] = useState("");
@@ -7,49 +8,86 @@ const SigninPage = () => {
   const [sentOtp, setSentOtp] = useState("");
   const [otpFlag, setOtpFlag] = useState(false);
   const [verifyFlag, setVerifyFlag] = useState(false);
+  const [verificationResponse, setVerificationResponse] = useState(null);
 
   //submitting form with detail
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-
-    console.log("Form data:", email);
-    if (email) {
-      setEmail("");
-      setVerifyFlag(false);
-      setOtpFlag(false);
-    }
-  };
 
   //sending otp to email
-  const handlesendOtp = (e) => {
+  const handlesendOtp = async (e) => {
     e.preventDefault();
 
     //api call
+    const data = {
+      email: email,
+    };
+    console.log(data);
 
-    console.log("Otp sent:", 233);
-    let t = true;
-    if (t) {
-      setOtpFlag(true);
+    try {
+      let response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/user/signin`,
+        data
+      );
+      console.log(response);
+
+      if (response.data.success) {
+        setOtpFlag(true);
+        alert(response.data.message || "Otp sent successfully!");
+      } else {
+        alert(`Error: ${response.data.message}`);
+      }
+    } catch (error) {
+      if (error.response?.data?.message) {
+        alert(`Error: ${error.response.data.message}`);
+      } else {
+        alert("An unexpected error occured!");
+      }
     }
   };
 
   //verifying the otp got on email
-  const handleOtpSubmit = (e) => {
+  const handleOtpSubmit = async (e) => {
     e.preventDefault();
 
-    //api call
+    const data = {
+      otpCode: otp,
+      email: email,
+    };
 
-    console.log("email:", email, "otpValue:", otp);
+    // api call
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/user/signin/verify-otp`,
+        data
+      );
+      if (response.data.success) {
+        setVerificationResponse(response.data);
+        localStorage.setItem("token", response.data.token);
+
+        alert(response.data.message || "Otp verified successfully!");
+      } else {
+        alert(`Error: ${response.data.message}`);
+      }
+    } catch (error) {
+      if (error.response?.data?.message) {
+        alert(`Error: ${error.response.data.message}`);
+      } else {
+        alert("An unexpected error occured!");
+        console.log(error);
+      }
+    }
   };
 
   //handling submit button - checking if verified and redirecting
-  const handleSubmit = () => {
-    // if(Response.success){
-    //     navigate("/home")
-    setEmail("");
-    setOtp("");
-    setOtpFlag(false);
-    // }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (verificationResponse?.success) {
+      // navigate("/home")
+      setEmail("");
+      setOtp("");
+      setOtpFlag(false);
+      alert("Hlo guys");
+    }
 
     console.log("navigating to homepage");
   };
@@ -77,7 +115,7 @@ const SigninPage = () => {
 
             {/* Form */}
 
-            <form onSubmit={handleFormSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="relative">
                 <input
                   type="email"

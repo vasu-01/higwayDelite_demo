@@ -26,12 +26,6 @@ const SignupPage = () => {
 
     //api call
 
-    console.log("Form data:", formData);
-
-    console.log("Otp sent:", 233);
-
-    console.log(`${import.meta.env.VITE_BASE_URL}`);
-
     try {
       let response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/user/signup`,
