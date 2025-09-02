@@ -31,7 +31,7 @@ const signupEmail = async (req, res) => {
 
     return res
       .status(200)
-      .json({ success: true, message: "OTP Sent for to your email" });
+      .json({ success: true, message: "OTP Sent to your email" });
   } catch (error) {
     console.log("error:", error);
     return res
@@ -75,7 +75,12 @@ const signupverifyOtp = async (req, res) => {
 
     return res
       .status(200)
-      .json({ success: true, message: "Signup Successfull", user, token });
+      .json({
+        success: true,
+        message: "Email verification successfull!",
+        user,
+        token,
+      });
   } catch (error) {
     console.log("error:", error);
     return res.status(500).json({
