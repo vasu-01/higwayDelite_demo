@@ -4,8 +4,23 @@ import { Otp } from "../models/otp.model.js";
 import { generateOtp } from "../helper/helper.js";
 import { sendEmail } from "../services/emailService.js";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-console.log(JWT_SECRET);
+const generateAccessTokenAndRefreshToken = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    console.error(
+      "Something went wrong whie generating refresh and access tokens"
+    );
+  }
+};
 
 // User signup controller
 const signupEmail = async (req, res) => {
@@ -48,10 +63,8 @@ const signupverifyOtp = async (req, res) => {
         .status(400)
         .json({ success: false, message: "All fields are required!" });
     }
-    // console.log("email:", email.trim(), "  otp:", otpCode.trim());
 
     const userExist = await Otp.findOne({ email, otpCode });
-    // console.log(userExist);
     if (!userExist) {
       return res.status(400).json({ error: "Invalid or expired otp!" });
     }
@@ -69,17 +82,27 @@ const signupverifyOtp = async (req, res) => {
 
     await Otp.deleteMany({ email });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const { accessToken, refreshToken } =
+      await generateAccessTokenAndRefreshToken(user._id);
 
-    return res
+    const loggedInuser = await User.findById(user._id).select("-refreshToken");
+    // console.log("loggedInUser:", loggedInuser);
+
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+    res
       .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
       .json({
         success: true,
-        message: "Email verification successfull!",
+        message: "OTP verified successfully!",
         user,
-        token,
+        accessToken,
+        refreshToken,
+        loggedInuser,
       });
   } catch (error) {
     console.log("error:", error);
@@ -155,13 +178,27 @@ const signinverifyOtp = async (req, res) => {
 
     await Otp.deleteMany({ email });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const { accessToken, refreshToken } =
+      await generateAccessTokenAndRefreshToken(user._id);
 
+    const loggedInuser = await User.findById(user._id).select("-refreshToken");
+
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
     res
       .status(200)
-      .json({ success: true, message: "Login successful", user, token });
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json({
+        success: true,
+        message: "OTP verified successfully!",
+        user,
+        accessToken,
+        refreshToken,
+        loggedInuser,
+      });
   } catch (error) {
     console.log("error:", error);
     return res
@@ -170,4 +207,23 @@ const signinverifyOtp = async (req, res) => {
   }
 };
 
-export { signupEmail, signupverifyOtp, signIn, signinverifyOtp };
+const logout = async (req, res) => {
+  await User.findByIdAndUpdate(req.user._id, {
+    $set: {
+      refreshToken: undefined,
+    },
+  });
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json({ success: true, message: "User logged out" });
+};
+
+export { signupEmail, signupverifyOtp, signIn, signinverifyOtp, logout };

@@ -12,8 +12,9 @@ const addNote = async (req, res) => {
 
     const noteDetail = await Notes.create({
       content,
-      user: req.userId,
+      user: req.user._id,
     });
+    // console.log("noteDetail :", noteDetail);
 
     return res
       .status(200)
@@ -26,7 +27,12 @@ const addNote = async (req, res) => {
 
 const getNotes = async (req, res) => {
   try {
-    const notes = await Notes.find({ user: req.userId });
+    const notes = await Notes.find({ user: req.user._id }).populate(
+      "user",
+      "fullName email "
+    );
+    // console.log(notes);
+
     if (!notes) {
       return res.status(404).json({ message: "Note record is empty!" });
     }
@@ -46,7 +52,8 @@ const deleteNote = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const note = await Notes.findOneAndDelete({ _id: id, user: req.userId });
+    const note = await Notes.findOneAndDelete({ _id: id, user: req.user._id });
+    // console.log(note);
     if (!note) {
       return res
         .status(404)

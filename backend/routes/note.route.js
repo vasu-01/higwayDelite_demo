@@ -12,6 +12,6 @@ router.post("/addNote", authMiddleware, addNote);
 
 router.get("/getNotes", authMiddleware, getNotes);
 
-router.delete("/delete/:id", authMiddleware, deleteNote);
+router.delete("/deleteNote/:id", authMiddleware, deleteNote);
 
 export default router;

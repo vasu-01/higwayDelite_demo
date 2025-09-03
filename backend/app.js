@@ -10,6 +10,8 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
     method: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 

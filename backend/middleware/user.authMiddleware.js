@@ -6,21 +6,19 @@ const authMiddleware = async (req, res, next) => {
     const token =
       req.cookies?.accessToken ||
       req.header("Authorization")?.replace("Bearer ", "");
-    console.log(token);
-
     if (!token) {
-      res.status(400).json({ message: "Unauthorized request" });
+      return res.status(400).json({ message: "Unauthorized request" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log(decoded);
-    const user = await User.findById(decoded?.id);
-    console.log("authMiddleware", user);
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await User.findById(decoded?._id).select("-refreshToken");
     if (!user) {
-      res.status(400).json({ message: "Invalid token" });
+      return res.status(400).json({ message: "Invalid token" });
     }
 
-    req.userId = user;
+    req.user = user;
+    console.log("reached here");
+
     next();
   } catch (error) {
     console.log("error", error);

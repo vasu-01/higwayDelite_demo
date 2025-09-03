@@ -4,7 +4,9 @@ import {
   signupverifyOtp,
   signIn,
   signinverifyOtp,
+  logout,
 } from "../controller/user.controller.js";
+import authMiddleware from "../middleware/user.authMiddleware.js";
 
 const router = Router();
 
@@ -18,4 +20,6 @@ router.post("/signin", signIn);
 
 router.post("/signin/verify-otp", signinverifyOtp);
 
+//logout
+router.post("/logout", authMiddleware, logout);
 export default router;
