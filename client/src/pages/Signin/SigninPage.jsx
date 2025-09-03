@@ -1,6 +1,7 @@
 import React, { use, useState } from "react";
 import { winImg, icon } from "../../assets/image";
 import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
 
 const SigninPage = () => {
   const [email, setEmail] = useState("");
@@ -9,6 +10,8 @@ const SigninPage = () => {
   const [otpFlag, setOtpFlag] = useState(false);
   const [verifyFlag, setVerifyFlag] = useState(false);
   const [verificationResponse, setVerificationResponse] = useState(null);
+
+  const navigate = useNavigate();
 
   //submitting form with detail
 
@@ -20,14 +23,12 @@ const SigninPage = () => {
     const data = {
       email: email,
     };
-    console.log(data);
 
     try {
       let response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/user/signin`,
         data
       );
-      console.log(response);
 
       if (response.data.success) {
         setOtpFlag(true);
@@ -61,7 +62,7 @@ const SigninPage = () => {
       );
       if (response.data.success) {
         setVerificationResponse(response.data);
-        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("token", response.data.accessToken);
 
         alert(response.data.message || "Otp verified successfully!");
       } else {
@@ -82,14 +83,11 @@ const SigninPage = () => {
     e.preventDefault();
 
     if (verificationResponse?.success) {
-      // navigate("/home")
       setEmail("");
       setOtp("");
       setOtpFlag(false);
-      alert("Hlo guys");
+      navigate("/dashboard", { state: { verificationResponse } });
     }
-
-    console.log("navigating to homepage");
   };
 
   return (
@@ -171,13 +169,13 @@ const SigninPage = () => {
 
             {/* Footer */}
             <p className="text-center text-sm text-gray-500 mt-4">
-              Already have an account?
-              <a
-                href="#"
+              New User?{" "}
+              <Link
+                to="/signup"
                 className="text-blue-500 cursor-pointer hover:underline"
               >
-                Sign in
-              </a>
+                Register
+              </Link>
             </p>
           </div>
         </div>

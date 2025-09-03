@@ -1,6 +1,7 @@
-import React, { use, useState } from "react";
+import React, { useState } from "react";
 import { winImg, icon } from "../../assets/image";
 import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignupPage = () => {
   const [otp, setOtp] = useState("");
@@ -11,6 +12,8 @@ const SignupPage = () => {
     dob: "",
     email: "",
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,9 +65,10 @@ const SignupPage = () => {
         `${import.meta.env.VITE_BASE_URL}/user/signup/verify-otp`,
         data
       );
+
       if (response.data.success) {
         setVerificationResponse(response.data);
-        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("token", response.data.accessToken);
 
         alert(response.data.message || "Otp verified successfully!");
       } else {
@@ -80,12 +84,11 @@ const SignupPage = () => {
     }
   };
 
-  console.log("VerifiedResponse:", verificationResponse);
-
   //handling submit button of form
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
     if (verificationResponse?.success) {
-      //     navigate("/home")
+      console.log("verificationResponse:", verificationResponse);
       setFormData({
         fullName: "",
         dob: "",
@@ -93,8 +96,8 @@ const SignupPage = () => {
       });
       setOtp("");
       setOtpFlag(false);
-      console.log("navigating to homepage");
-      alert("Signedup Successfully!");
+
+      navigate("/dashboard", { state: { verificationResponse } });
     } else {
       alert("Please verify email before submitting!");
     }
@@ -212,13 +215,13 @@ const SignupPage = () => {
 
             {/* Footer */}
             <p className="text-center text-sm text-gray-500 mt-4">
-              Already have an account?
-              <a
-                href="#"
+              Already have an account?{" "}
+              <Link
+                to="/"
                 className="text-blue-500 cursor-pointer hover:underline"
               >
                 Sign in
-              </a>
+              </Link>
             </p>
           </div>
         </div>
